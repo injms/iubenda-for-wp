@@ -58,7 +58,7 @@ function injms_save_json( $json, $filename ) {
 
 
 // The main function - call this to embed the policy anywhere in your theme
-// eg echo injms_iubenda( 123456, true, black );
+// eg echo injms_iubenda( 123456, true, 'black' );
 //  - first variable is the policy ID
 //	- the second is true / false for whether a table of contents is generated 
 //	with some jQuery
