@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: WP Iubenda Policy user
- * Plugin URI: http://inj.ms/wp-iubenda
+ * Plugin URI: http://inj.ms/iubenda
  * Description: Use your Iubenda privacy and cookies policy without JavaScript
  * Version: 0.85
  * Author: Ian James
