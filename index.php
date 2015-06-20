@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: WP Iubenda Policy user
+ * Plugin Name: WP Iubenda policy embedder
  * Plugin URI: http://inj.ms/iubenda
  * Description: Use your Iubenda privacy and cookies policy without JavaScript
  * Version: 0.85
