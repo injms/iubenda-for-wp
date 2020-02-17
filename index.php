@@ -152,7 +152,7 @@ function injms_iubenda_shortcode( $atts, $content = null ) {
 				'theme'     => 'nostyle',
 			), $atts
 		);
-		return injms_iubenda( $values['id'], $values['script'], $values['style'] );
+		return injms_iubenda( $values['policy_id'], $values['toc'], $values['theme'] );
 }
 
 add_shortcode( 'injms_iubenda', 'injms_iubenda_shortcode' );
