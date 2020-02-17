@@ -136,3 +136,23 @@ function injms_iubenda( $policy_id, $toc, $theme ) {
 		return preg_replace( '/<br \\/>/', '</p><p>', $injms_iubenda->output_php->content );
 	}
 }
+
+/**
+ * [injms_iubenda] shortcode wrapper for injms_iubenda( $policy_id, $toc, $theme ).
+ *
+ * @param  array  $atts    shortcode attributes.
+ * @param  string $content shortcode content.
+ * @return string          iubenda policy.
+ */
+function injms_iubenda_shortcode( $atts, $content = null ) {
+		$values = shortcode_atts(
+			array(
+				'policy_id' => '',
+				'toc'       => false,
+				'theme'     => 'nostyle',
+			), $atts
+		);
+		return injms_iubenda( $values['id'], $values['script'], $values['style'] );
+}
+
+add_shortcode( 'injms_iubenda', 'injms_iubenda_shortcode' );
