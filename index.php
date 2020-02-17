@@ -3,7 +3,7 @@
  * Plugin Name: WP Iubenda policy embedder
  * Plugin URI: http://inj.ms/iubenda
  * Description: Use your Iubenda privacy and cookies policy without JavaScript
- * Version: 0.85
+ * Version: 0.86
  * Author: Ian James
  * Author URI: http://inj.ms
  * GitHub Plugin URI: https://github.com/injms/iubenda-for-wp
