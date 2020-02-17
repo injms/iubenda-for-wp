@@ -103,7 +103,7 @@ function injms_iubenda( $policy_id, $toc, $theme ) {
 		// We only want to save this if it's been successful.
 		// This is the first part of the return JSON : { success: 1, ...}
 		// If not, we serve the JavaScript fallback and break.
-		if ( $injms_iubenda->output_php->success == true ) {
+		if ( true == $injms_iubenda->output_php->success ) {
 			injms_save_json( $injms_iubenda->json, $injms_iubenda->file );
 		} else {
 			return "<a href=\"//www.iubenda.com/privacy-policy/{$policy_id}\" class=\"iubenda-{$theme} iubenda-embed\" title=\"Privacy Policy\">Privacy Policy</a><script type=\"text/javascript\">(function (w,d) {var loader = function () {var s = d.createElement(\"script\"), tag = d.getElementsByTagName(\"script\")[0]; s.src = \"//cdn.iubenda.com/iubenda.js\"; tag.parentNode.insertBefore(s,tag);}; if(w.addEventListener){w.addEventListener(\"load\", loader, false);}else if(w.attachEvent){w.attachEvent(\"onload\", loader);}else{w.onload = loader;}})(window, document);</script>";
@@ -113,7 +113,7 @@ function injms_iubenda( $policy_id, $toc, $theme ) {
 	$injms_iubenda->output_json = file_get_contents( $injms_iubenda->file );
 	$injms_iubenda->output_php  = json_decode( $injms_iubenda->output_json );
 
-	if ( $injms_iubenda->output_php->success == true and $toc == true ) {
+	if ( true == $injms_iubenda->output_php->success && true == $toc ) {
 		return preg_replace( '/<br \\/>/', '</p><p>', $injms_iubenda->output_php->content ) .
 			"<script>
 				(function($){
@@ -132,7 +132,7 @@ function injms_iubenda( $policy_id, $toc, $theme ) {
 
 				})(jQuery);
 			</script>";
-	} elseif ( $injms_iubenda->output_php->success == true ) {
+	} elseif ( true == $injms_iubenda->output_php->success ) {
 		return preg_replace( '/<br \\/>/', '</p><p>', $injms_iubenda->output_php->content );
 	}
 }
