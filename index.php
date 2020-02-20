@@ -16,143 +16,79 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
-
 /**
- * Time when a file needs to be refetched from the JSON source
- *
- * @var integer $timelapse
+ * Sanity check.
  */
-$timelapse = 86400; // 24 hours in seconds ( 60 x 60 x 24 )
+if ( ! function_exists( 'injms_iubenda' ) ) {
 
+	/**
+	 * The main function - call this to embed the policy anywhere in your theme
+	 *
+	 * @param  array  $atts same as shortcode attributes.
+	 * @param  string $content same as shortcode content.
+	 *
+	 * @return string iubenda policy.
+	 */
+	function injms_iubenda( $atts, $content = null ) {
+		// Read attributes.
+		$policy_id    = $atts['policy_id'];
+		$iub_theme    = $atts['theme'];
+		$text_only    = $atts['text_only'] ? 'no-markup' : '';
+		$max_age      = $atts['cache'];
+		$transient_id = "iubenda-policy-{$policy_id}-{$iub_theme}-{$text_only}";
+		$embed_link   = "<a href=\"//www.iubenda.com/privacy-policy/{$policy_id}\" class=\"iubenda-{$iub_theme} iubenda-embed\" title=\"Privacy Policy\">Privacy Policy</a><script type=\"text/javascript\">(function (w,d) {var loader = function () {var s = d.createElement(\"script\"), tag = d.getElementsByTagName(\"script\")[0]; s.src = \"//cdn.iubenda.com/iubenda.js\"; tag.parentNode.insertBefore(s,tag);}; if(w.addEventListener){w.addEventListener(\"load\", loader, false);}else if(w.attachEvent){w.attachEvent(\"onload\", loader);}else{w.onload = loader;}})(window, document);</script>";
 
-/**
- * Check the age of a file, and return true if less than $timelapse old
- *
- * @param  integer $file_age  file age.
- * @param  integer $timelapse timelapse.
- * @return bool true if less than $timelapse old.
- */
-function injms_check_age( $file_age, $timelapse ) {
-	$current_time    = time();
-	$time_difference = $current_time - $file_age;
+		// Check cache.
+		$content = get_transient( $transient_id );
 
-	return $time_difference < $timelapse;
-};
-
-/**
- * GET the $url and returns it
- *
- * @param  string $url remote url.
- * @return object $data curl response.
- */
-function injms_curl( $url ) {
-	$ch      = curl_init();
-	$timeout = 5;
-	curl_setopt( $ch, CURLOPT_URL, $url );
-	curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
-	curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, $timeout );
-	$data = curl_exec( $ch );
-	curl_close( $ch );
-	return $data;
-}
-
-/**
- * Save the supplied JSON
- *
- * @param  object $json     file data
- * @param  string $filename file name
- * @return void
- */
-function injms_save_json( $json, $filename ) {
-	file_put_contents( $filename, $json );
-};
-
-/**
- * The main function - call this to embed the policy anywhere in your theme
- * eg echo injms_iubenda( 123456, true, 'black' );
- *
- * @param  integer $policy_id first variable is the policy ID.
- * @param  bool    $toc       true / false for whether a table of contents
- *                            is generated with some jQuery.
- * @param  string  $theme     what colour the fallback JavaScript button
- *                            should be: black|white|nostyle.
- *                            Note the nostyle needs a pro account.
- * @return string iubenda policy.
- */
-function injms_iubenda( $policy_id, $toc, $theme ) {
-
-	$injms_upload_dir = wp_upload_dir();
-
-	$injms_iubenda            = new stdClass();
-	$injms_iubenda->directory = $injms_upload_dir['basedir'] . '/injms-iubenda/';
-	$injms_iubenda->file      = $injms_iubenda->directory . $policy_id . '.json';
-
-	// Check to make sure the directory that
-	// we're going to cache the JSON file in exists.
-	if ( ! file_exists( $injms_iubenda->directory ) ) {
-		mkdir( $injms_iubenda->directory, '0755', true );
-	}
-
-	// Check to make sure a file isn't already cached.
-	if ( ! file_exists( $injms_iubenda->file ) ) {
-
-		$injms_iubenda->json = injms_curl( 'https://www.iubenda.com/api/privacy-policy/' . $policy_id . '/no-markup' );
-
-		$injms_iubenda->output_php = json_decode( $injms_iubenda->json );
-
-		// We only want to save this if it's been successful.
-		// This is the first part of the return JSON : { success: 1, ...}
-		// If not, we serve the JavaScript fallback and break.
-		if ( true == $injms_iubenda->output_php->success ) {
-			injms_save_json( $injms_iubenda->json, $injms_iubenda->file );
-		} else {
-			return "<a href=\"//www.iubenda.com/privacy-policy/{$policy_id}\" class=\"iubenda-{$theme} iubenda-embed\" title=\"Privacy Policy\">Privacy Policy</a><script type=\"text/javascript\">(function (w,d) {var loader = function () {var s = d.createElement(\"script\"), tag = d.getElementsByTagName(\"script\")[0]; s.src = \"//cdn.iubenda.com/iubenda.js\"; tag.parentNode.insertBefore(s,tag);}; if(w.addEventListener){w.addEventListener(\"load\", loader, false);}else if(w.attachEvent){w.attachEvent(\"onload\", loader);}else{w.onload = loader;}})(window, document);</script>";
+		// Returns cached result.
+		if ( false !== $content ) {
+			return $content;
 		}
+
+		// Remote request.
+		$response = wp_remote_request( "https://www.iubenda.com/api/privacy-policy/{$policy_id}/{$text_only}" );
+
+		// Fallback to embed link.
+		if ( is_wp_error( $response ) ) {
+			return $embed_link;
+		}
+
+		// Decode result.
+		$content = wp_remote_retrieve_body( $response );
+		$content = json_decode( $content );
+
+		// Update cache.
+		if ( ! empty( $content ) && isset( $content->content ) ) {
+			$content           = $content->content;
+			$transient_updated = set_transient( $transient_id, $content, $max_age );
+		} else {
+			$content = $embed_link;
+		}
+
+		return preg_replace( '/<br \\/>/', '</p><p>', $content );
 	}
 
-	$injms_iubenda->output_json = file_get_contents( $injms_iubenda->file );
-	$injms_iubenda->output_php  = json_decode( $injms_iubenda->output_json );
-
-	if ( true == $injms_iubenda->output_php->success && true == $toc ) {
-		return preg_replace( '/<br \\/>/', '</p><p>', $injms_iubenda->output_php->content ) .
-			"<script>
-				(function($){
-					var policyHeadings = $('#policy-contents :header:not(h1)'),
-						toc = $('#policy-table-of-contents');
-
-					for (var i = 0; i < policyHeadings.length; i++) {
-						var text = policyHeadings[i].innerHTML,
-							id = encodeURIComponent( text ).replace(/[\(|\)|\*|%20|_|\.|\']/g, \"\" ),
-							level = policyHeadings[i]
-
-						policyHeadings[i].id = id;
-
-						toc.append('<li class=\"indent-' + policyHeadings[i].localName + '\"><a href=\"#' + id + '\">' + text + '</a></li>')
-					};
-
-				})(jQuery);
-			</script>";
-	} elseif ( true == $injms_iubenda->output_php->success ) {
-		return preg_replace( '/<br \\/>/', '</p><p>', $injms_iubenda->output_php->content );
-	}
-}
-
-/**
- * [injms_iubenda] shortcode wrapper for injms_iubenda( $policy_id, $toc, $theme ).
- *
- * @param  array  $atts    shortcode attributes.
- * @param  string $content shortcode content.
- * @return string          iubenda policy.
- */
-function injms_iubenda_shortcode( $atts, $content = null ) {
+	/**
+	 * [injms_iubenda] shortcode  wrapper for injms_iubenda().
+	 *
+	 * @param  array  $atts    shortcode attributes.
+	 * @param  string $content shortcode content.
+	 *
+	 * @return string          iubenda policy.
+	 */
+	function injms_iubenda_shortcode( $atts, $content = null ) {
 		$values = shortcode_atts(
 			array(
 				'policy_id' => '',
-				'toc'       => false,
-				'theme'     => 'nostyle',
+				'theme'     => 'white', // black | white | nostyle.
+				'text_only' => false,
+				'cache'     => 86400, // 24 hours in seconds ( 60 x 60 x 24 ).
 			), $atts
 		);
-		return injms_iubenda( $values['policy_id'], $values['toc'], $values['theme'] );
-}
 
-add_shortcode( 'injms_iubenda', 'injms_iubenda_shortcode' );
+		return injms_iubenda( $values, $content );
+	}
+
+	add_shortcode( 'injms_iubenda', 'injms_iubenda_shortcode' );
+}
