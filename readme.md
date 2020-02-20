@@ -12,7 +12,7 @@ How To use
 Simply add the following within your theme or where you want the policy to appear:
 
 ```php
-[injms_iubenda policy_id="123456", theme="white" text_only=0 cache=86400]
+[injms_iubenda policy_id="123456" theme="white" text_only=0 cache=86400]
 ```
 
 ```php
