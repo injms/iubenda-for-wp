@@ -19,10 +19,12 @@ Simply add the following within your theme or where you want the policy to appea
 <?php
 
 echo injms_iubenda([
-  "policy_id" => "123456",
-  "theme"     => "white", // black | white | nostyle.
-  "text_only" => false,
-  "cache"     => 86400   // 24 hours in seconds ( 60 x 60 x 24 ).
+  'policy_id' => '123456',
+  'type'      => 'privacy-policy', // privacy-policy | cookie-policy | terms-and-conditions.
+  'theme'     => 'white', // black | white | nostyle.
+  'text_only' => true,
+  'iframe'    => false,
+  'cache'     => 86400, // 24 hours in seconds ( 60 x 60 x 24 ).
 ]);
 ```
 

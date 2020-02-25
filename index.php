@@ -3,7 +3,7 @@
  * Plugin Name: WP Iubenda policy embedder
  * Plugin URI: http://inj.ms/iubenda
  * Description: Use your Iubenda privacy and cookies policy without JavaScript
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Ian James
  * Author URI: http://inj.ms
  * GitHub Plugin URI: https://github.com/injms/iubenda-for-wp
@@ -32,11 +32,28 @@ if ( ! function_exists( 'injms_iubenda' ) ) {
 	function injms_iubenda( $atts, $content = null ) {
 		// Read attributes.
 		$policy_id    = $atts['policy_id'];
+		$type         = $atts['type'];
 		$iub_theme    = $atts['theme'];
 		$text_only    = $atts['text_only'] ? 'no-markup' : '';
+		$iframe       = $atts['iframe'];
 		$max_age      = $atts['cache'];
-		$transient_id = "iubenda-policy-{$policy_id}-{$iub_theme}-{$text_only}";
-		$embed_link   = "<a href=\"//www.iubenda.com/privacy-policy/{$policy_id}\" class=\"iubenda-{$iub_theme} iubenda-embed\" title=\"Privacy Policy\">Privacy Policy</a><script type=\"text/javascript\">(function (w,d) {var loader = function () {var s = d.createElement(\"script\"), tag = d.getElementsByTagName(\"script\")[0]; s.src = \"//cdn.iubenda.com/iubenda.js\"; tag.parentNode.insertBefore(s,tag);}; if(w.addEventListener){w.addEventListener(\"load\", loader, false);}else if(w.attachEvent){w.attachEvent(\"onload\", loader);}else{w.onload = loader;}})(window, document);</script>";
+		$label        = str_replace( [ ' E ', ' And ' ], [ ' e ', ' and ' ], ucwords( str_replace( '-', ' ', $type ) ) );
+		$transient_id = "iubenda-{$type}-{$policy_id}-{$iub_theme}-{$text_only}";
+		$cookie_fix   = '';
+
+		// Fix cookie policy API.
+		if ( 'cookie-policy' === $type ) {
+			$type       = 'privacy-policy';
+			$cookie_fix = 'cookie-policy';
+			$text_only  = 'cookie-policy';
+		}
+
+		$embed_link = "<a href=\"//www.iubenda.com/{$type}/{$policy_id}/{$cookie_fix}\" class=\"iubenda-{$iub_theme} iubenda-embed\" title=\"{$label}\">{$label}</a><script type=\"text/javascript\">(function (w,d) {var loader = function () {var s = d.createElement(\"script\"), tag = d.getElementsByTagName(\"script\")[0]; s.src = \"//cdn.iubenda.com/iubenda.js\"; tag.parentNode.insertBefore(s,tag);}; if(w.addEventListener){w.addEventListener(\"load\", loader, false);}else if(w.attachEvent){w.attachEvent(\"onload\", loader);}else{w.onload = loader;}})(window, document);</script>";
+
+		// Link only.
+		if ( $iframe ) {
+			return $embed_link;
+		}
 
 		// Check cache.
 		$content = get_transient( $transient_id );
@@ -47,7 +64,7 @@ if ( ! function_exists( 'injms_iubenda' ) ) {
 		}
 
 		// Remote request.
-		$response = wp_remote_request( "https://www.iubenda.com/api/privacy-policy/{$policy_id}/{$text_only}" );
+		$response = wp_remote_request( "https://www.iubenda.com/api/{$type}/{$policy_id}/{$text_only}" );
 
 		// Fallback to embed link.
 		if ( is_wp_error( $response ) ) {
@@ -81,8 +98,10 @@ if ( ! function_exists( 'injms_iubenda' ) ) {
 		$values = shortcode_atts(
 			array(
 				'policy_id' => '',
+				'type'      => 'privacy-policy', // privacy-policy | cookie-policy | terms-and-conditions.
 				'theme'     => 'white', // black | white | nostyle.
-				'text_only' => false,
+				'text_only' => true,
+				'iframe'    => false,
 				'cache'     => 86400, // 24 hours in seconds ( 60 x 60 x 24 ).
 			), $atts
 		);
